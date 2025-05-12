@@ -70,7 +70,10 @@ function resolveImageURL(key: string) {
     @contextmenu="handleContextmenu"
     @mousedown="handleWindowDrag"
   >
-    <img :src="backgroundImagePath">
+    <img
+      :src="backgroundImagePath"
+      style="height: 100%;"
+    >
 
     <canvas id="live2dCanvas" />
 

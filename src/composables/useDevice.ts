@@ -1,6 +1,5 @@
 import type { Ref } from 'vue'
 
-import { useDebounceFn } from '@vueuse/core'
 import { reactive, ref } from 'vue'
 
 import { LISTEN_KEY } from '../constants'
@@ -48,10 +47,7 @@ export function useDevice() {
   const mousePosition = reactive<MouseMoveValue>({ x: 0, y: 0 })
   const pressedKeys = ref<string[]>([])
   const catStore = useCatStore()
-
-  const debounceCapsLockRelease = useDebounceFn(() => {
-    handleRelease(pressedKeys, 'CapsLock')
-  }, 100)
+  let isCapsLockPressed = false
 
   const handlePress = <T>(array: Ref<T[]>, value?: T) => {
     if (!value) return
@@ -65,6 +61,19 @@ export function useDevice() {
     array.value = array.value.filter(item => item !== value)
   }
 
+  const handleCapsLock = (kind: string) => {
+    if (kind === 'KeyboardPress') {
+      if (!isCapsLockPressed) {
+        handlePress(pressedKeys, 'CapsLock')
+        isCapsLockPressed = true
+      }
+    } else if (kind === 'KeyboardRelease') {
+      if (isCapsLockPressed) {
+        handleRelease(pressedKeys, 'CapsLock')
+        isCapsLockPressed = false
+      }
+    }
+  }
   const normalizeKeyValue = (key: string) => {
     key = key.replace(/^(Meta).*/, '$1').replace(/F(\d+)/, 'Fn')
 
@@ -80,9 +89,7 @@ export function useDevice() {
     const { kind, value } = payload
 
     if (value === 'CapsLock') {
-      handlePress(pressedKeys, 'CapsLock')
-
-      return debounceCapsLockRelease()
+      return handleCapsLock(kind)
     }
 
     switch (kind) {
